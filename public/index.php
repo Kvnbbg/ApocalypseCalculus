@@ -27,9 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         case 'storeLike':
             $key = $data['key'] ?? '';
-            $value = $data['value'] ?? '';
-            $storage->set($key, $value);
-            echo json_encode(['success' => true]);
+            if (!empty($key)) {
+                // Use increment for like counts, which is more robust.
+                $newCount = $storage->increment($key);
+                echo json_encode(['success' => true, 'newCount' => $newCount]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Key not provided']);
+            }
             break;
             
         default:
