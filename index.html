@@ -6,17 +6,27 @@
     <title>Apocalypse Calculus</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
     <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --accent-primary: #ff3333;
+            --accent-secondary: #cc0000;
+            --overlay-bg: rgba(0, 0, 0, 0.85);
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            font-family: system-ui, -apple-system, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
+            line-height: 1.5;
         }
         h1 {
             font-size: 3em;
@@ -47,32 +57,49 @@
         #interaction-section {
             text-align: center;
             margin-bottom: 20px;
-            background: rgba(255, 0, 0, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px #ff0000;
-            width: 80%;
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(255, 51, 51, 0.15);
+            width: 90%;
             max-width: 600px;
+            position: relative;
         }
         #interaction-section input {
-            font-size: 1.5em;
-            padding: 10px;
+            font-size: 1.2em;
+            padding: 12px 16px;
             margin: 10px;
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #ff0000;
-            border-radius: 5px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            width: calc(100% - 52px);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        #interaction-section input:focus {
+            box-shadow: 0 0 0 3px rgba(255, 51, 51, 0.3);
         }
         #interaction-section button {
-            font-size: 1.5em;
+            font-size: 1.1em;
             padding: 10px 20px;
-            background-color: #ff0000;
-            color: #fff;
+            background-color: var(--accent-primary);
+            color: var(--text-primary);
             border: none;
             cursor: pointer;
-            border-radius: 5px;
+            border-radius: 8px;
             margin: 5px;
-            transition: background-color 0.3s;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            min-width: 100px;
+        }
+        #interaction-section button:hover {
+            background-color: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+        #interaction-section button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 51, 51, 0.3);
         }
         #interaction-section button:hover {
             background-color: #cc0000;
@@ -122,9 +149,151 @@
             #interaction-section button { font-size: 1.1em; padding: 8px 12px; }
         }
 
+        /* Social Panel Styles */
+        .social-toggle {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .social-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent-secondary);
+        }
+        .social-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.3);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .social-panel.active {
+            right: 0;
+        }
+        .social-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .social-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .close-panel {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .social-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .social-stats {
+            display: flex;
+            gap: 15px;
+        }
+        .social-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .social-action:hover {
+            background: var(--accent-primary);
+        }
+        .author-info {
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .share-section {
+            border-top: 1px solid var(--accent-primary);
+            padding-top: 20px;
+        }
+        .share-section h4 {
+            margin: 0 0 15px 0;
+            color: var(--text-primary);
+        }
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .share-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-primary);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .share-button:hover {
+            background: var(--accent-primary);
+            transform: scale(1.1);
+        }
+        
         /* Cookie consent modal */
-        #cookie-consent { position: fixed; left: 12px; right: 12px; bottom: 12px; background: rgba(0,0,0,0.9); color:#fff; padding:12px; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.6); display:none; z-index:1000; }
-        #cookie-consent button { background:#222; border:1px solid #555; color:#fff; padding:8px 12px; border-radius:6px; }
+        #cookie-consent { 
+            position: fixed; 
+            left: 12px; 
+            right: 12px; 
+            bottom: 12px; 
+            background: var(--overlay-bg); 
+            color: var(--text-primary); 
+            padding: 16px; 
+            border-radius: 12px; 
+            box-shadow: 0 6px 24px rgba(0,0,0,0.6); 
+            display: none; 
+            z-index: 1000; 
+        }
+        #cookie-consent button { 
+            background: var(--bg-secondary); 
+            border: 1px solid var(--accent-primary); 
+            color: var(--text-primary); 
+            padding: 8px 16px; 
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #cookie-consent button:hover {
+            background: var(--accent-primary);
+        }
     </style>
 </head>
 <body>
@@ -137,14 +306,37 @@
     <input type="text" id="user-answer" placeholder="Your answer" aria-label="Answer input">
     <button id="submit-answer" aria-label="Submit answer">Submit</button>
     <button id="hint-button" aria-label="Show hint">Hint</button>
-        <div id="social-bar" style="margin-top:10px; display:flex; gap:8px; align-items:center; justify-content:center;">
-            <button id="like-button" title="Like this challenge">♡ <span id="like-count">0</span></button>
-            <button id="follow-button" title="Follow the author">Follow</button>
-            <div id="author-name" style="font-size:0.9em; opacity:0.9"></div>
-            <div id="share-buttons" style="display:flex; gap:6px;">
-                <button id="share-x" title="Share to X">X</button>
-                <button id="share-fb" title="Share to Facebook">FB</button>
-                <button id="share-copy" title="Copy link">Copy</button>
+        <!-- Social Panel Toggle -->
+        <button id="social-toggle" class="social-toggle" aria-expanded="false" aria-controls="social-panel">
+            <span class="social-icon">👥</span>
+        </button>
+        
+        <!-- Social Panel -->
+        <div id="social-panel" class="social-panel" aria-hidden="true">
+            <div class="social-header">
+                <h3>Share & Connect</h3>
+                <button class="close-panel" aria-label="Close social panel">×</button>
+            </div>
+            <div class="social-content">
+                <div class="social-stats">
+                    <button id="like-button" class="social-action" title="Like this challenge">
+                        <span class="icon">♥</span>
+                        <span id="like-count">0</span>
+                    </button>
+                    <button id="follow-button" class="social-action" title="Follow the author">
+                        <span class="icon">👤</span>
+                        <span>Follow</span>
+                    </button>
+                </div>
+                <div id="author-name" class="author-info"></div>
+                <div class="share-section">
+                    <h4>Share</h4>
+                    <div class="share-buttons">
+                        <button id="share-x" class="share-button" title="Share to X">𝕏</button>
+                        <button id="share-fb" class="share-button" title="Share to Facebook">f</button>
+                        <button id="share-copy" class="share-button" title="Copy link">📋</button>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="feedback"></div>
@@ -726,6 +918,28 @@
             }
         });
 
+        // Social panel controls
+        const socialToggle = document.getElementById('social-toggle');
+        const socialPanel = document.getElementById('social-panel');
+        const closePanel = document.querySelector('.close-panel');
+
+        function toggleSocialPanel() {
+            const isExpanded = socialToggle.getAttribute('aria-expanded') === 'true';
+            socialToggle.setAttribute('aria-expanded', !isExpanded);
+            socialPanel.classList.toggle('active');
+            socialPanel.setAttribute('aria-hidden', isExpanded);
+        }
+
+        socialToggle.addEventListener('click', toggleSocialPanel);
+        closePanel.addEventListener('click', toggleSocialPanel);
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!socialPanel.contains(e.target) && !socialToggle.contains(e.target) && socialPanel.classList.contains('active')) {
+                toggleSocialPanel();
+            }
+        });
+
         // Like / follow / share handlers
         likeButton.addEventListener('click', () => {
             if (!currentChallenge) return;
@@ -734,7 +948,8 @@
             const count = prev + 1;
             storageSet(key, String(count));
             likeCountEl.textContent = count;
-            likeButton.textContent = `♥ ${count}`;
+            const icon = likeButton.querySelector('.icon');
+            icon.textContent = '♥';
         });
 
         followButton.addEventListener('click', () => {
