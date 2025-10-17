@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apocalypse Calculus</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ff0000;
+            animation: glow 2s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #ff0000; }
+            to { text-shadow: 0 0 20px #ff0000; }
+        }
+        #animation-container {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+            transform: scale(1);
+        }
+        #animation-container.fade-in {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        #animation-container.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        #interaction-section {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(255, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px #ff0000;
+            width: 80%;
+            max-width: 600px;
+        }
+        #interaction-section input {
+            font-size: 1.5em;
+            padding: 10px;
+            margin: 10px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #ff0000;
+            border-radius: 5px;
+        }
+        #interaction-section button {
+            font-size: 1.5em;
+            padding: 10px 20px;
+            background-color: #ff0000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        #interaction-section button:hover {
+            background-color: #cc0000;
+        }
+        #feedback {
+            font-size: 1.5em;
+            margin-top: 10px;
+            animation: feedback-pop 0.5s;
+        }
+        @keyframes feedback-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #score, #level, #streak {
+            font-size: 1.5em;
+            margin: 5px;
+        }
+        #progress-bar {
+            width: 100%;
+            background: #333;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #progress-fill {
+            height: 100%;
+            background: #ff0000;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        footer {
+            position: absolute;
+            bottom: 10px;
+            text-align: center;
+            font-size: 1em;
+        }
+        footer a {
+            color: #ff0000;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Apocalypse Calculus</h1>
+    <div id="animation-container"></div>
+    <div id="interaction-section">
+        <div id="challenge"></div>
+        <input type="text" id="user-answer" placeholder="Your answer">
+        <button id="submit-answer">Submit</button>
+        <button id="hint-button">Hint</button>
+        <div id="feedback"></div>
+        <div id="score">Score: 0</div>
+        <div id="level">Level: 1</div>
+        <div id="streak">Streak: 0</div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+    </div>
+    <footer>
+        by Kevin Marville, <a href="https://github.com/kvnbbg" target="_blank">https://github.com/kvnbbg</a>, <a href="https://instagram.com/techandstream" target="_blank">https://instagram.com/techandstream</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+    <script>
+        const animationContainer = document.getElementById('animation-container');
+        const challenge = document.getElementById('challenge');
+        const userAnswer = document.getElementById('user-answer');
+        const submitButton = document.getElementById('submit-answer');
+        const hintButton = document.getElementById('hint-button');
+        const feedback = document.getElementById('feedback');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const streakElement = document.getElementById('streak');
+        const progressFill = document.getElementById('progress-fill');
+        let score = 0;
+        let streak = 0;
+        let currentChallenge = null;
+        let autoTimeout = null;
+        let hintUsed = false;
+
+        const encouragementMessages = [
+            "Great job!",
+            "Awesome!",
+            "You're on fire!",
+            "Keep it up!",
+            "Brilliant!",
+            "Excellent!",
+            "Well done!",
+            "Superb!",
+            "Fantastic!",
+            "You're a math wizard!"
+        ];
+
+        // Function to get level
+        function getLevel() {
+            return Math.floor(score / 10) + 1;
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = (score % 10) * 10;
+            progressFill.style.width = `${progress}%`;
+            levelElement.innerHTML = `Level: ${getLevel()}`;
+        }
+
+        // Array of operation generators
+        const operations = [
+            // ... (all previous operations remain the same)
+            // Basic addition
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 100 * level) + 1;
+                const b = Math.floor(Math.random() * 100 * level) + 1;
+                return { expr: `${a} + ${b}`, result: a + b, tex: `${a} + ${b}` };
+            },
+            // Subtraction
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 100 * level) + 1;
+                const b = Math.floor(Math.random() * 100 * level) + 1;
+                return { expr: `${Math.max(a, b)} - ${Math.min(a, b)}`, result: Math.max(a, b) - Math.min(a, b), tex: `${Math.max(a, b)} - ${Math.min(a, b)}` };
+            },
+            // Multiplication
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 20 * level) + 1;
+                const b = Math.floor(Math.random() * 20 * level) + 1;
+                return { expr: `${a} * ${b}`, result: a * b, tex: `${a} \\times ${b}` };
+            },
+            // Division
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 20 * level) + 1;
+                const b = Math.floor(Math.random() * 10 * level) + 2;
+                const product = a * b;
+                return { expr: `${product} / ${b}`, result: product / b, tex: `${product} \\div ${b}` };
+            },
+            // Percentage
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 100 * level) + 1;
+                const b = Math.floor(Math.random() * 100 * level) + 1;
+                return { expr: `${a}% of ${b}`, result: (a / 100 * b).toFixed(2), tex: `${a}\\% \\ of \\ ${b}` };
+            },
+            // Negative
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 100 * level) + 1;
+                return { expr: `-${a}`, result: -a, tex: `-${a}` };
+            },
+            // Binary
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 256 * level) + 1;
+                return { expr: `Binary of ${a}`, result: a.toString(2), tex: `\\text{Binary of } ${a}` };
+            },
+            // Square root
+            () => {
+                const level = getLevel();
+                const a = Math.pow(Math.floor(Math.random() * 20 * level) + 1, 2);
+                return { expr: `√${a}`, result: Math.sqrt(a), tex: `\\sqrt{${a}}` };
+            },
+            // Circle area
+            () => {
+                const level = getLevel();
+                const r = Math.floor(Math.random() * 10 * level) + 1;
+                return { expr: `Area of circle r=${r}`, result: (Math.PI * r * r).toFixed(2), tex: `\\text{Area of circle } r=${r}` };
+            },
+            // Triangle area
+            () => {
+                const level = getLevel();
+                const b = Math.floor(Math.random() * 20 * level) + 1;
+                const h = Math.floor(Math.random() * 20 * level) + 1;
+                return { expr: `Area of triangle base=${b} height=${h}`, result: (0.5 * b * h).toFixed(2), tex: `\\text{Area of triangle base}=${b} \\ height=${h}` };
+            },
+            // Even check
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 100 * level) + 1;
+                return { expr: `Is ${a} even?`, result: a % 2 === 0 ? 'Yes' : 'No', tex: `\\text{Is } ${a} \\text{ even?}` };
+            },
+            // Power
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 10 * level) + 1;
+                const b = Math.floor(Math.random() * 4) + 2;
+                return { expr: `${a}^${b}`, result: Math.pow(a, b), tex: `${a}^{${b}}` };
+            },
+            // Modulo
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 100 * level) + 1;
+                const b = Math.floor(Math.random() * 10 * level) + 2;
+                return { expr: `${a} % ${b}`, result: a % b, tex: `${a} \\mod ${b}` };
+            },
+            // Trigonometry
+            () => {
+                const angles = [0, 30, 45, 60, 90, 120, 150, 180, 270, 360];
+                const func = ['sin', 'cos', 'tan'][Math.floor(Math.random() * 3)];
+                let a = angles[Math.floor(Math.random() * angles.length)];
+                const level = getLevel();
+                a += Math.floor(Math.random() * 10 * level);
+                let result;
+                const rad = a * Math.PI / 180;
+                if (func === 'sin') result = Math.sin(rad).toFixed(2);
+                else if (func === 'cos') result = Math.cos(rad).toFixed(2);
+                else {
+                    if (Math.abs(Math.cos(rad)) < 0.001) return getRandomOperation();
+                    result = Math.tan(rad).toFixed(2);
+                }
+                return { expr: `${func}(${a}°)`, result, tex: `\\${func}(${a}^\\circ)` };
+            },
+            // Kinetic energy
+            () => {
+                const level = getLevel();
+                const m = Math.floor(Math.random() * 10 * level) + 1;
+                const v = Math.floor(Math.random() * 10 * level) + 1;
+                return { expr: `Kinetic energy m=${m} v=${v}`, result: (0.5 * m * v * v).toFixed(2), tex: `\\text{Kinetic energy } m=${m} \\ v=${v}` };
+            },
+            // Fall distance
+            () => {
+                const level = getLevel();
+                const t = Math.floor(Math.random() * 5 * level) + 1;
+                return { expr: `Fall distance in ${t}s (g=9.8)`, result: (0.5 * 9.8 * t * t).toFixed(2), tex: `\\text{Fall distance in } ${t}\\text{s (g=9.8)}` };
+            },
+            // Euclidean distance
+            () => {
+                const level = getLevel();
+                const x1 = Math.floor(Math.random() * 10 * level);
+                const y1 = Math.floor(Math.random() * 10 * level);
+                const x2 = Math.floor(Math.random() * 10 * level);
+                const y2 = Math.floor(Math.random() * 10 * level);
+                return { expr: `Dist (${x1},${y1}) to (${x2},${y2})`, result: Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2).toFixed(2), tex: `\\text{Dist } (${x1},${y1}) \\ to \\ (${x2},${y2})` };
+            },
+            // Spherical angle sum
+            () => {
+                return { expr: `Angle sum in spherical triangle`, result: `>180°`, tex: `\\text{Angle sum in spherical triangle}` };
+            },
+            // Hydrogen energy
+            () => {
+                const level = getLevel();
+                const n = Math.floor(Math.random() * 5 * level) + 1;
+                return { expr: `H atom energy n=${n} (eV)`, result: (-13.6 / (n * n)).toFixed(2), tex: `\\text{H atom energy } n=${n} \\ (eV)` };
+            },
+            // Log10
+            () => {
+                const level = getLevel();
+                const a = Math.pow(10, Math.floor(Math.random() * level) + 1);
+                return { expr: `log10(${a})`, result: Math.log10(a), tex: `\\log_{10}(${a})` };
+            },
+            // Exponential
+            () => {
+                const level = getLevel();
+                const a = Math.floor(Math.random() * 5 * level) + 1;
+                return { expr: `e^${a}`, result: Math.exp(a).toFixed(2), tex: `e^{${a}}` };
+            },
+            // New: Derivative
+            () => {
+                const level = getLevel();
+                const coeffs = [];
+                const degree = Math.min(3 + Math.floor(level / 2), 5);
+                for (let i = 0; i <= degree; i++) {
+                    coeffs.push(Math.floor(Math.random() * 10 * level) - 5 * level); // allow negatives
+                }
+                let poly = coeffs.map((c, i) => c !== 0 ? `${c > 0 && i > 0 ? '+' : ''}${c === 1 && i > 0 ? '' : c === -1 && i > 0 ? '-' : c}x^{${i}}` : '').reverse().join('').replace(/\^{1}/g, '').replace(/x^{0}/g, '');
+                poly = poly.replace(/^\+/, '').replace(/\-/g, ' - ').replace(/\+/g, ' + ');
+                let deriv = coeffs.slice(1).map((c, i) => c * (i + 1) !== 0 ? `${c * (i + 1) > 0 && i > 0 ? '+' : ''}${c * (i + 1) === 1 && i > 0 ? '' : c * (i + 1) === -1 && i > 0 ? '-' : c * (i + 1)}x^{${i}}` : '').reverse().join('').replace(/\^{1}/g, '').replace(/x^{0}/g, '');
+                deriv = deriv.replace(/^\+/, '').replace(/\-/g, ' - ').replace(/\+/g, ' + ') || '0';
+                const texPoly = coeffs.map((c, i) => c !== 0 ? `${c > 0 && i > 0 ? '+' : ''}${Math.abs(c) === 1 && i > 1 ? '' : c}x^{${i}}` : '').reverse().join('').replace(/\^{1}/g, '').replace(/x^{0}/g, '');
+                const texDeriv = coeffs.slice(1).map((c, i) => {
+                    const newC = c * (i + 1);
+                    return newC !== 0 ? `${newC > 0 && i > 0 ? '+' : ''}${Math.abs(newC) === 1 && i > 0 ? '' : newC}x^{${i}}` : '';
+                }).reverse().join('').replace(/\^{1}/g, '').replace(/x^{0}/g, '') || '0';
+                return { expr: `d/dx (${poly})`, result: deriv, tex: `\\frac{d}{dx} (${texPoly})`, resultTex: texDeriv };
+            }
+        ];
+
+        // Function to get random operation
+        function getRandomOperation() {
+            const index = Math.floor(Math.random() * operations.length);
+            return operations[index]();
+        }
+
+        // Render KaTeX
+        function renderMath(element, tex) {
+            element.innerHTML = katex.renderToString(tex, { throwOnError: false });
+        }
+
+        // Enhanced animation loop
+        function startAnimation() {
+            const op = getRandomOperation();
+            animationContainer.classList.add('fade-out');
+            const transitionListener = () => {
+                animationContainer.innerHTML = '';
+                renderMath(animationContainer, op.tex);
+                animationContainer.classList.remove('fade-out');
+                animationContainer.classList.add('fade-in');
+                animationContainer.removeEventListener('transitionend', transitionListener);
+            };
+            animationContainer.addEventListener('transitionend', transitionListener);
+
+            setTimeout(() => {
+                animationContainer.innerHTML = '';
+                renderMath(animationContainer, `${op.tex} = ${op.resultTex || op.result}`);
+            }, 2000);
+
+            setTimeout(() => {
+                animationContainer.classList.remove('fade-in');
+                animationContainer.classList.add('fade-out');
+                const nextListener = () => {
+                    startAnimation();
+                    animationContainer.removeEventListener('transitionend', nextListener);
+                };
+                animationContainer.addEventListener('transitionend', nextListener);
+            }, 4000);
+        }
+
+        // Start animation
+        startAnimation();
+
+        // Auto submit
+        function autoSubmit() {
+            if (currentChallenge) {
+                const answer = userAnswer.value.trim();
+                const isCorrect = answer == currentChallenge.result;
+                if (isCorrect) {
+                    feedback.innerHTML = 'Correct! (auto)';
+                    score++;
+                    streak++;
+                    feedback.innerHTML += `<br>${encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]}`;
+                } else {
+                    feedback.innerHTML = `Wrong! Correct is ${currentChallenge.result} (auto)`;
+                    streak = 0;
+                }
+                updateProgress();
+                scoreElement.innerHTML = `Score: ${score}`;
+                streakElement.innerHTML = `Streak: ${streak}`;
+                setTimeout(newChallenge, 5000);
+            }
+        }
+
+        // New challenge
+        function newChallenge() {
+            currentChallenge = getRandomOperation();
+            challenge.innerHTML = '';
+            renderMath(challenge, `Solve: ${currentChallenge.tex}`);
+            userAnswer.value = '';
+            feedback.innerHTML = '';
+            hintUsed = false;
+            clearTimeout(autoTimeout);
+            autoTimeout = setTimeout(autoSubmit, 30000);
+        }
+
+        // Input event to reset timeout
+        userAnswer.addEventListener('input', () => {
+            clearTimeout(autoTimeout);
+            autoTimeout = setTimeout(autoSubmit, 30000);
+        });
+
+        // Submit
+        submitButton.addEventListener('click', () => {
+            clearTimeout(autoTimeout);
+            if (currentChallenge) {
+                const answer = userAnswer.value.trim();
+                const isCorrect = answer == currentChallenge.result; // loose for string/number
+                if (isCorrect) {
+                    feedback.innerHTML = 'Correct!';
+                    score++;
+                    streak++;
+                    feedback.innerHTML += `<br>${encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]}`;
+                } else {
+                    feedback.innerHTML = `Wrong! Correct is ${currentChallenge.result}`;
+                    streak = 0;
+                }
+                updateProgress();
+                scoreElement.innerHTML = `Score: ${score}`;
+                streakElement.innerHTML = `Streak: ${streak}`;
+                setTimeout(newChallenge, 2000);
+            }
+        });
+
+        // Hint button
+        hintButton.addEventListener('click', () => {
+            if (currentChallenge && !hintUsed) {
+                hintUsed = true;
+                const hint = typeof currentChallenge.result === 'string' ? currentChallenge.result.substring(0, Math.floor(currentChallenge.result.length / 2)) + '...' : `Starts with ${currentChallenge.result.toString().charAt(0)}`;
+                feedback.innerHTML = `Hint: ${hint}`;
+            }
+        });
+
+        // Initial
+        newChallenge();
+        updateProgress();
+    </script>
+</body>
+</html>
