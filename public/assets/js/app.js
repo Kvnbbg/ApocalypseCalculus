@@ -70,6 +70,8 @@ class ApocalypseCalculus {
         this.elements.prevBtn.addEventListener('click', () => this.newChallenge());
         this.elements.nextBtn.addEventListener('click', () => this.newChallenge());
         this.elements.hardModeBtn.addEventListener('click', () => this.toggleHardMode());
+    // Extreme difficulty toggle via long-press or double click
+    this.elements.hardModeBtn.addEventListener('dblclick', () => this.toggleExtremeMode());
         
         // Social actions
         this.elements.likeButton.addEventListener('click', () => this.handleLike());
@@ -120,11 +122,12 @@ class ApocalypseCalculus {
 
     async newChallenge() {
         this.clearTimeouts();
-        
+        // request level from UI
+        const level = this.extremeMode ? 12 : (this.score ? Math.floor(this.score/5)+1 : 1);
         const response = await fetch('/index.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'getOperation' })
+            body: JSON.stringify({ action: 'getOperation', level })
         });
         
         this.currentChallenge = await response.json();
@@ -164,6 +167,26 @@ class ApocalypseCalculus {
         this.gctx.fillRect(0, 0, w, this.elements.canvas.height);
         
         // Add geometric patterns here
+    }
+
+    // Extreme mode toggle
+    toggleExtremeMode() {
+        this.extremeMode = !this.extremeMode;
+        this.elements.hardModeBtn.textContent = this.extremeMode ? 'Hard: Extreme' : (this.hardMode ? 'Hard: On' : 'Hard: Off');
+        this.elements.hardModeBtn.setAttribute('aria-pressed', this.extremeMode ? 'true' : 'false');
+        this.newChallenge();
+    }
+
+    // Utility: add resource link to DOM (PDF)
+    addResourceLink() {
+        if (document.getElementById('resource-block')) return;
+        const div = document.createElement('div');
+        div.id = 'resource-block';
+        div.style.marginTop = '12px';
+        div.style.fontSize = '0.95em';
+        div.innerHTML = `Advanced: <a href="https://math.dartmouth.edu/~m46s21/Script_MATH46_2020.pdf" target="_blank">Applied Mathematics (PDF)</a>`;
+        const parent = document.getElementById('interaction-section');
+        parent.insertBefore(div, parent.querySelector('#feedback'));
     }
 
     // Storage methods

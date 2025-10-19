@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     switch ($action) {
         case 'getOperation':
-            echo json_encode($operations->getRandomOperation());
+            $level = isset($data['level']) ? (int)$data['level'] : 1;
+            echo json_encode($operations->getRandomOperationForLevel($level));
             break;
             
         case 'checkAnswer':
