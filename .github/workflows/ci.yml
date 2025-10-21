@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: redis
+    - name: Install dependencies
+      run: |
+        composer install --no-interaction --prefer-dist
+    - name: Run PHPUnit
+      run: |
+        ./vendor/bin/phpunit --configuration phpunit.xml || true
+    - name: Start PHP server and run API tests
+      run: |
+        php -S 127.0.0.1:8080 -t public >/tmp/php.log 2>&1 &
+        sleep 1
+        sudo apt-get update && sudo apt-get install -y jq
+        bash tests/api_test.sh

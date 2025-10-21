@@ -5,41 +5,53 @@ require_once __DIR__ . '/../src/Storage.php';
 $storage = new Storage();
 $operations = new Operations();
 
-// Handle AJAX requests
+// Handle AJAX requests (robust JSON + CORS + error handling)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Allow CORS for development. Lock this down in production.
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
     header('Content-Type: application/json');
-    
-    $data = json_decode(file_get_contents('php://input'), true);
+
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid JSON payload']);
+        exit;
+    }
+
     $action = $data['action'] ?? '';
-    
-    switch ($action) {
-        case 'getOperation':
-            $level = isset($data['level']) ? (int)$data['level'] : 1;
-            echo json_encode($operations->getRandomOperationForLevel($level));
-            break;
-            
-        case 'checkAnswer':
-            $result = $operations->checkAnswer(
-                $data['userAnswer'] ?? '',
-                $data['expectedAnswer'] ?? ''
-            );
-            echo json_encode(['correct' => $result]);
-            break;
-            
-        case 'storeLike':
-            $key = $data['key'] ?? '';
-            if (!empty($key)) {
-                // Use increment for like counts, which is more robust.
-                $newCount = $storage->increment($key);
-                echo json_encode(['success' => true, 'newCount' => $newCount]);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Key not provided']);
-            }
-            break;
-            
-        default:
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid action']);
+    try {
+        switch ($action) {
+            case 'getOperation':
+                $level = isset($data['level']) ? (int)$data['level'] : 1;
+                $op = $operations->getRandomOperationForLevel($level);
+                echo json_encode($op);
+                break;
+
+            case 'checkAnswer':
+                $user = $data['userAnswer'] ?? '';
+                $expected = $data['expectedAnswer'] ?? '';
+                $result = $operations->checkAnswer($user, $expected);
+                echo json_encode(['correct' => (bool)$result]);
+                break;
+
+            case 'storeLike':
+                $key = $data['key'] ?? '';
+                $value = $data['value'] ?? '';
+                if (!$key) { http_response_code(400); echo json_encode(['error'=>'Missing key']); break; }
+                $storage->set($key, $value);
+                echo json_encode(['success' => true]);
+                break;
+
+            default:
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid action']);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Server error', 'message' => $e->getMessage()]);
     }
     exit;
 }
