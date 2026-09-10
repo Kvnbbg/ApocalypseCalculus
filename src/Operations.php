@@ -88,7 +88,7 @@ class Operations {
         }
 
         // default: algebraic / calculus problems
-        $type = $useSeed ? $srand('type', 1, 6) : rand(1,6);
+        $type = $useSeed ? $srand('type', 1, 7) : rand(1,7);
         switch ($type) {
             case 1:
                 $x = $useSeed ? $srand('x', 1, 10*$level) : rand(1,10*$level);
@@ -108,6 +108,36 @@ class Operations {
                 $tex = "\\frac{d}{dx} x^{".$n."}";
                 $result = ($n).'x^'.($n-1);
                 return ['expr'=>$expr,'tex'=>$tex,'result'=>$result,'resultTex'=>$result,'author'=>'Kevin Marville'];
+            case 7:
+                // Mental-math multiplication drills (e.g. 17×77, 23×45, 36×27)
+                $favorites = [
+                    [17, 77],
+                    [23, 45],
+                    [36, 27],
+                    [48, 19],
+                    [17, 17],
+                ];
+                if ($useSeed) {
+                    $pair = $schoice('mul_fav', $favorites);
+                } else {
+                    $pair = $favorites[array_rand($favorites)];
+                    if (rand(0, 1) === 1) {
+                        $pair = [
+                            rand(11, 12 + 6 * $level),
+                            rand(11, 12 + 6 * $level)
+                        ];
+                    }
+                }
+                $p = $pair[0];
+                $q = $pair[1];
+                $prod = $p * $q;
+                return [
+                    'expr' => "{$p} * {$q}",
+                    'tex' => "{$p} \\times {$q}",
+                    'result' => (string)$prod,
+                    'resultTex' => (string)$prod,
+                    'author' => 'Kevin Marville'
+                ];
             default:
                 $a = $useSeed ? $srand('a3', 1, 12) : rand(1,12);
                 $b = $useSeed ? $srand('b3', 1, 12) : rand(1,12);
