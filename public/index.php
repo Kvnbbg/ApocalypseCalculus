@@ -7,7 +7,6 @@ $operations = new Operations();
 
 // Handle AJAX requests (robust JSON + CORS + error handling)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Allow CORS for development. Lock this down in production.
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
@@ -138,6 +137,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    <!-- Module autonome MentalMath (sans build) — avant app.js pour window.MentalMath -->
+    <script src="/assets/js/modules/MentalMath.js"></script>
     <script src="/assets/js/app.js"></script>
 </body>
 </html>
