@@ -1,10 +1,17 @@
 <?php
-
+/**
+ * Operations — générateur serveur autonome (pas de dépendance Composer runtime).
+ *
+ * Symbiose avec :
+ *   - data/challenges.json (favorites multiplication)
+ *   - public/assets/js/modules/MentalMath.js (même liste côté client)
+ *
+ * Sécurité : aucun eval ; checkAnswer pure comparaison.
+ */
 class Operations {
     private $operations;
 
     public function __construct() {
-        // Initialize operations array with operation generators
         $this->operations = [];
     }
 
@@ -19,14 +26,16 @@ class Operations {
         ];
     }
 
-    // New: generate an operation for a given level (int)
+    /**
+     * Génère une opération pour un niveau donné.
+     * @param int $level 1+ (6+ intégrales Gamma, 10+ PDE curatées)
+     * @param string|null $seed si fourni, tirage déterministe (tests)
+     */
     public function getRandomOperationForLevel($level = 1, $seed = null) {
         $level = max(1, (int)$level);
         $useSeed = $seed !== null;
 
-        // helper closures for deterministic values when seed provided
         $srand = function($key, $min, $max) use ($seed) {
-            // create integer from hash
             $h = substr(sha1($seed . ':' . $key), 0, 12);
             $num = hexdec($h);
             return $min + ($num % ($max - $min + 1));
@@ -35,9 +44,8 @@ class Operations {
             $idx = $srand($key, 0, count($arr)-1);
             return $arr[$idx];
         };
-        // extreme applied math problems when level >= 10
+
         if ($level >= 10) {
-            // curated extreme applied math problems
             $extremes = [
                 [
                     'expr' => 'Solve Laplace\'s equation in polar coordinates for a bounded stream function',
@@ -68,9 +76,7 @@ class Operations {
             return $choice;
         }
 
-        // medium/hard deterministic examples
         if ($level >= 6) {
-            // integral with parameter (use seed if provided)
             if ($useSeed) {
                 $a = $srand('a', 1, 5);
                 $b = $srand('b', 1, 4);
@@ -80,14 +86,13 @@ class Operations {
             }
             $expr = "Evaluate \\int_0^{\\infty} x^{".$a."} e^{-".$b." x} \\; dx";
             $tex = "\\int_0^{\\infty} x^{".$a."} e^{-".$b." x} \\; dx";
-            // gamma function result: Gamma(a+1)/b^{a+1}
             $gamma = 'Gamma('.($a+1).')';
             $result = "{$gamma}/{$b}^".($a+1);
             $resultTex = "\\frac{\\Gamma(".($a+1).")}{".$b."^{".($a+1)."}}";
             return ['expr'=>$expr, 'tex'=>$tex, 'result'=>$result, 'resultTex'=>$resultTex, 'author'=>'Advanced'];
         }
 
-        // default: algebraic / calculus problems
+        // type 1..7 — case 7 = multiplications (DRY avec data/challenges.json)
         $type = $useSeed ? $srand('type', 1, 7) : rand(1,7);
         switch ($type) {
             case 1:
@@ -109,12 +114,12 @@ class Operations {
                 $result = ($n).'x^'.($n-1);
                 return ['expr'=>$expr,'tex'=>$tex,'result'=>$result,'resultTex'=>$result,'author'=>'Kevin Marville'];
             case 7:
-                // Mental-math multiplication drills (e.g. 17×77, 23×45, 36×27)
+                // Favorites = data/challenges.json + MentalMath.FAVORITES (ne pas dupliquer ailleurs)
                 $favorites = [
                     [17, 77],
                     [23, 45],
                     [36, 27],
-                    [48, 19],
+                    [48, 19], // 48×19 = 912 (méthode ×20 − 1)
                     [17, 17],
                 ];
                 if ($useSeed) {
@@ -148,20 +153,21 @@ class Operations {
         }
     }
 
+    /**
+     * Comparaison sécurisée (pas d’eval) : texte, yes/no, numérique tolérant.
+     */
     public function checkAnswer($userAnswer, $expectedAnswer) {
         $userAnswer = trim($userAnswer);
         $expectedAnswer = trim($expectedAnswer);
-        
+
         if (empty($expectedAnswer)) {
             return false;
         }
 
-        // Case-insensitive comparison for text answers
         if (strtolower($userAnswer) === strtolower($expectedAnswer)) {
             return true;
         }
 
-        // Yes/No handling
         if (preg_match('/^yes$|^no$|^y$|^n$/i', $expectedAnswer)) {
             if (preg_match('/^yes$|^y$|^true$|^1$/i', $userAnswer)) {
                 return preg_match('/^yes|y|true|1/i', $expectedAnswer);
@@ -171,17 +177,15 @@ class Operations {
             }
         }
 
-        // Numeric comparison with tolerance
         $userNum = $this->extractNumber($userAnswer);
         $expectedNum = $this->extractNumber($expectedAnswer);
-        
+
         if ($userNum !== null && $expectedNum !== null) {
             $absDiff = abs($userNum - $expectedNum);
             $rel = abs($absDiff / (abs($expectedNum) + 1e-9));
             return ($absDiff <= 0.01 || $rel <= 0.005);
         }
 
-        // Normalized string comparison
         $normalizeStr = function($str) {
             return strtolower(preg_replace('/[^a-z0-9\.\^%\-]+/i', '', $str));
         };
