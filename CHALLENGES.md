@@ -1,6 +1,7 @@
 # Daily Challenges Log
 
 Session recorded from the Grok brain-booster thread.
+Source machine-readable : [`data/challenges.json`](data/challenges.json).
 
 ## 2026-09-10 — Daily challenge wrap + extras
 
@@ -18,6 +19,13 @@ Session recorded from the Grok brain-booster thread.
 | (17² − 8) × 9 | 2,529 | left-to-right chain |
 | 17² − 8 × 9 | 217 | PEMDAS: 289 − 72 |
 | 23 × 45 | 1,035 | 23×40 + 23×5 |
-| **36 × 27** | **972** | 36×20 + 36×7, or 36×(30−3) |
+| 36 × 27 | 972 | 36×(30−3) |
+| **48 × 19** | **912** | **48×20 − 48 = 960 − 48** (alt: (50−2)×19) |
 
-Next suggested: `48 × 19`.
+### Méthode ×19 (gain pédagogique)
+
+```
+48 × 19 = 48 × (20 − 1) = 48 × 20 − 48 = 960 − 48 = 912
+```
+
+Module JS : `public/assets/js/modules/MentalMath.js` → `fortyEightTimesNineteen()` / `multiplyNearRound(48, 20)`.

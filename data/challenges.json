@@ -1,0 +1,58 @@
+{
+  "schema": "apocalypse-calculus-challenges/v1",
+  "session": {
+    "date": "2026-09-10",
+    "appScore": 195,
+    "tasks": 5,
+    "time": "1:00",
+    "accuracy": "100%"
+  },
+  "drills": [
+    {
+      "id": "mul-17-77",
+      "expr": "17 * 77",
+      "result": 1309,
+      "method": "17*(70+7)=1190+119",
+      "chain": "1309 * 9 = 11781"
+    },
+    {
+      "id": "mul-17-17",
+      "expr": "17 * 17",
+      "result": 289,
+      "method": "(10+7)^2 = 100+140+49"
+    },
+    {
+      "id": "chain-17sq-8-times9-ltr",
+      "expr": "(17*17 - 8) * 9",
+      "result": 2529,
+      "note": "left-to-right chain"
+    },
+    {
+      "id": "pemdas-17sq-minus-8times9",
+      "expr": "17^2 - 8*9",
+      "result": 217,
+      "note": "PEMDAS: 289 - 72"
+    },
+    {
+      "id": "mul-23-45",
+      "expr": "23 * 45",
+      "result": 1035,
+      "method": "23*40 + 23*5"
+    },
+    {
+      "id": "mul-36-27",
+      "expr": "36 * 27",
+      "result": 972,
+      "method": "36*(30-3)=1080-108"
+    },
+    {
+      "id": "mul-48-19",
+      "expr": "48 * 19",
+      "result": 912,
+      "method": "48*20 - 48 = 960 - 48",
+      "alt": "(50-2)*19 = 950 - 38"
+    }
+  ],
+  "favorites": [[17, 77], [23, 45], [36, 27], [48, 19], [17, 17]],
+  "nextGain": "Extend MentalMath module + PHP favorites stay in sync with this file"
+}
